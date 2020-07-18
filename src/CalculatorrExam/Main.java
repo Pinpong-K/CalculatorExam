@@ -23,6 +23,17 @@ public class Main {
                 System.out.println("Bye!");
                 break;
             }
+            if(input.equals("/prev"))
+            {
+                cal.callPreviousHistory();
+                continue;
+            }
+            if(input.equals("/help"))
+            {
+                System.out.println("/exit for end program");
+                System.out.println("/prev for call previous history");
+                continue;
+            }
             if (input.contains("=")) {
                 cal.setAssignValue(input);
             }

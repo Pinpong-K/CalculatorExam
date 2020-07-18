@@ -9,10 +9,11 @@ import java.util.regex.Pattern;
 public class Calculater {
 
 
-    private ArrayList<LinkedList<TokenItem>> historyList = new ArrayList<>();
+    private Map<Integer, ArrayList<TokenItem>> listHistory = new HashMap<>();
     private ArrayList<TokenItem> tokeList = new ArrayList<>();
     private Map<String, ArrayList<TokenItem>>assignValue = new HashMap<>();
     private boolean isError = false;
+    private int historyCount = 0;
 
     public Calculater() {
     }
@@ -49,36 +50,46 @@ public class Calculater {
 
     public void setExpression(String input) {
 
+        //have assign value use calculate assign method
         if(assignValue.size() > 0)
         {
-            double result = calculateAssignExpression(input);
-            System.out.println(result);
-            return;
+            ArrayList<TokenItem> token = this.lexicalAnalyser(input);
+            LinkedList<TokenItem> postfix = calculateAssignExpression(token);
+            double result = calculate(postfix);
+            if (isError) {
+                System.out.println("Invalid expression");
+            } else {
+                listHistory.put(historyCount,token);
+                System.out.println(result);
+                historyCount++;
+            }
         }
-        //reset data
-        tokeList.clear();
-        assignValue.clear();
-        isError = false;
+        else {
+            //reset data
+            tokeList.clear();
+            assignValue.clear();
+            isError = false;
 
-        //init new input
-        this.tokeList = this.lexicalAnalyser(input);
-        LinkedList<TokenItem> postfix =  toPostfix(tokeList);
-        double result = calculate(postfix);
-        if(isError)
-        {
-            System.out.println("Invalid expression");
-        }else {
-            System.out.println(result);
+            //init new input
+            this.tokeList = this.lexicalAnalyser(input);
+            LinkedList<TokenItem> postfix = toPostfix(tokeList);
+            double result = calculate(postfix);
+            if (isError) {
+                System.out.println("Invalid expression");
+            } else {
+                listHistory.put(historyCount,this.tokeList);
+                System.out.println(result);
+                historyCount++;
+            }
         }
     }
 
     //use for calculate assign value
-    public double calculateAssignExpression(String input)
+    public LinkedList<TokenItem> calculateAssignExpression(ArrayList<TokenItem> token)
     {
         tokeList.clear();
         isError = false;
 
-        ArrayList<TokenItem> token = this.lexicalAnalyser(input);
         for (TokenItem item : token) {
             if (item.token == Token.IDENTIFIER) {
                 ArrayList<TokenItem> assing = assignValue.get(item.value);
@@ -87,9 +98,9 @@ public class Calculater {
                 tokeList.add(item);
             }
         }
-        LinkedList<TokenItem> tokenItems = toPostfix(tokeList);
+
         //clean assignValue value;
-        return calculate(tokenItems);
+        return  toPostfix(tokeList);
 
     }
 
@@ -222,6 +233,28 @@ public class Calculater {
         return  stack.pop();
     }
 
+
+    public void callPreviousHistory()
+    {
+        if(historyCount <= 0)
+        {
+            System.out.println("History not found ");
+            return;
+        }
+        ArrayList<TokenItem> previous = listHistory.get(historyCount-1);
+        if(previous.size() <= 0)
+        {
+            System.out.println("History not found ");
+            return;
+        }
+        LinkedList<TokenItem> postfix = toPostfix(previous);
+        double result = calculate(postfix);
+        for (TokenItem t: previous){
+            System.out.print(t.value);
+        }
+        System.out.println(" = "+result);
+
+    }
 }
 
 
